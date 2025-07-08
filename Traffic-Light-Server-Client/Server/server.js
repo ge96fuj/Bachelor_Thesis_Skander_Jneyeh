@@ -3,7 +3,7 @@
 global.SECRET_KEY = "f2b7d0c6a3e1c9d56fa43ec0e75bd98b192de4f3914bc7ecb487a3eb5f68a219";
 global.HashingOn = false;
 global.TimestampOn = false;
-global.AllowedDelay = 5; // Timestamp verification
+global.AllowedDelay = 5; // Timestamp verification in seconds
 
 //publish status in MQTT ?
 
