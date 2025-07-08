@@ -6,7 +6,7 @@ global.TimestampOn = false;
 global.AllowedDelay = 5; // Timestamp verification
 
 //publish status in MQTT ?
-global.MQTT = false ;
+
 //Server Config
 global.IP = '192.168.0.106';
 PORT = 12345;
@@ -20,9 +20,8 @@ require('./services/api.server.js');
 const  { sendCommand } = require('./utils/traffic.commands.js');
 const { validateMessage } = require('./utils/security');
 //require('./services/api.server.js');
-if(global.MQTT){
-  require('./services/mqtt.service.js');
-}
+require('./services/mqtt.service.js');
+
 
 
 // SERVER CONFIG 
