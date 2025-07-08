@@ -1,6 +1,6 @@
 # 🚦 Traffic Light Control System
 
-This project is a traffic light control system that includes a server (Node.js) and multiple clients (e.g., Arduino or ESP32). The system supports optional security features like HMAC signing and timestamp verification.
+This project is a traffic light control system that includes a server (Node.js) and multiple clients (e.g., Arduino). The system supports optional security features like HMAC signing and timestamp verification.
 
 ## 📦 Features
 
