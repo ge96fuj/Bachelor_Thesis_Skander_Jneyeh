@@ -2,12 +2,6 @@
 
 This project is a traffic light control system that includes a server (Node.js) and multiple clients (e.g., Arduino). The system supports optional security features like HMAC signing and timestamp verification.
 
-##     📦 Features
-
-- Control traffic lights via MQTT/HTTP
-- Support for secure communication (HMAC + timestamp)
-- Real-time status updates between clients and server
-- Configurable client ID and IP setup
 
 ---
 
@@ -28,6 +22,13 @@ To enable security features like **HMAC** and **timestamp verification**, set th
 verifyTimeStamp = true   // or false
 Hashing = true           // or false
 ```
+
+
+### 3. Share Traffic light Status via MQTT
+
+
+
+
 
 ## Edit the configuration file on the server side:
 In config/config.js, define the traffic lights by assigning each a unique ID, optional group name, and the duration for red, yellow, and green lights (in milliseconds). The ID used in the config must match the ID hardcoded on the corresponding client.
@@ -58,3 +59,10 @@ module.exports = [
   }
 ];
 ```
+## Run The Server
+```js
+cd Traffic-Light-Server-Client/Server
+npm install
+npm start
+```
+
