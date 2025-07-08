@@ -1,4 +1,6 @@
-#include <WiFiNINA.h>
+// TODO : ADD hashing to the response if hashing is true
+// if msg received >1 -> hashing and timestamp should be false ... otherwise error and close
+#include <WiFi101.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 #include <Crypto.h>
@@ -11,17 +13,18 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000);
 
 // Security Config :
 const char* secret_key = "f2b7d0c6a3e1c9d56fa43ec0e75bd98b192de4f3914bc7ecb487a3eb5f68a219";
+const char* secret_key_fake = "f2b7d0c6a3e1c9d56fa43ec0e75bd98b192de4f3914bc7ecb487a3eb5f68a218";
 const size_t MSG_LEN = 37;
 const uint32_t allowedDelay = 5;
-boolean verifyTimeStamp = true; //false if no internet 
+boolean verifyTimeStamp = false; //false if no internet 
 boolean Hashing = true;
 
 // Wi-Fi Credentials
-char ssid[] = "WIFISSID";
-char password[] = "WIFIPW";
+char ssid[] = "SKA";
+char password[] = "55333932s";
 
 // Server Configuration
-const char* serverIP = "SERVERIP";
+const char* serverIP = "192.168.0.104";
 const int serverPort = 12345;
 
 enum TrafficLightState { RED, YELLOW, GREEN };
@@ -110,46 +113,74 @@ void handleRequests() {
   }
 
   if (client.available()) {
-    byte msg[MSG_LEN];
-    client.read(msg, MSG_LEN);
-    byte command = msg[0];
+    String jsonString = client.readStringUntil('}');  // Read until end of JSON
+    jsonString += "}";  // Re-add closing brace
 
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, jsonString);
+    if (error) {
+      Serial.print("JSON Parse Error: ");
+      Serial.println(error.c_str());
+      client.stop();
+      return;
+    }
+
+    // Extract values
+    int command = doc["command"];
+    const char* hmac = doc["hmac"];
+    unsigned long timestamp = doc["timestamp"] | 0;
+
+    // --- Timestamp check ---
     if (verifyTimeStamp) {
       timeClient.update();
-      unsigned long nowTime = timeClient.getEpochTime();
-      uint32_t timestamp = ((uint32_t)msg[1] << 24) | ((uint32_t)msg[2] << 16) | ((uint32_t)msg[3] << 8) | ((uint32_t)msg[4]);
-
-      if (abs((long)(nowTime - timestamp)) > allowedDelay) {
+      unsigned long now = timeClient.getEpochTime();
+      if (abs((long)(now - timestamp)) > allowedDelay) {
         Serial.println("Timestamp invalid - possible replay attack");
         client.stop();
         turnAll();
-        Serial.println("Closing socket .. and waiting for 5 sec before retrying");
         delay(5000);
         return;
       }
-      Serial.println("Timestamp Check Valid");
-    } else {
-      Serial.println("Skipping timestamp check");
+      Serial.println("Timestamp check passed");
     }
 
+    // --- HMAC check ---
     if (Hashing) {
-      byte receivedHMAC[32];
-      memcpy(receivedHMAC, &msg[5], 32);
-      if (!verifyHMAC(msg, 5, receivedHMAC)) {
-        Serial.println("HMAC verification failed");
+      // Remove hmac from the JSON before recomputing hash
+      doc.remove("hmac");
+
+      String jsonToHash;
+      serializeJson(doc, jsonToHash);
+
+      SHA256 sha256;
+      uint8_t hmacBytes[SHA256::HASH_SIZE];
+      const uint8_t* key = (const uint8_t*)secret_key;
+      size_t keyLen = strlen(secret_key);
+
+      sha256.resetHMAC(key, keyLen);
+      sha256.update((const uint8_t*)jsonToHash.c_str(), jsonToHash.length());
+      sha256.finalizeHMAC(key, keyLen, hmacBytes, sizeof(hmacBytes));
+
+      // Convert HMAC to hex
+      char computedHmac[65];
+      for (int i = 0; i < SHA256::HASH_SIZE; i++) {
+        sprintf(&computedHmac[i * 2], "%02x", hmacBytes[i]);
+      }
+      computedHmac[64] = '\0';
+
+      if (strcmp(hmac, computedHmac) != 0) {
+        Serial.println("HMAC mismatch - authentication failed .. retrying in 5 seconds");
         client.stop();
         turnAll();
-        Serial.println("Closing socket .. and waiting for 5 sec before retrying");
         delay(5000);
         return;
       }
-      Serial.println("Hashing Check is Valid");
 
-    } else {
-      Serial.println("Skipping hashing check");
+      Serial.println("HMAC check passed");
     }
 
-    Serial.print("Valid request: 0x");
+    // --- Command Execution ---
+    Serial.print("Valid command received: 0x");
     Serial.println(command, HEX);
 
     switch (command) {
@@ -159,7 +190,7 @@ void handleRequests() {
       case 0x23: goYellow(); break;
       case 0x25: goBlink(); break;
       default:
-        Serial.print("Unknown command received: 0x");
+        Serial.print("Unknown command: 0x");
         Serial.println(command, HEX);
         break;
     }
@@ -192,10 +223,11 @@ void sendStatus() {
     doc["timestamp"] = now;
   }
 
-
+  // Prepare JSON string before HMAC (exclude hmac field)
   String jsonToHash;
   serializeJson(doc, jsonToHash);
 
+  // Compute HMAC if needed
   if (Hashing) {
     SHA256 sha256;
     uint8_t hmacBytes[SHA256::HASH_SIZE];
@@ -206,7 +238,7 @@ void sendStatus() {
     sha256.update((const uint8_t*)jsonToHash.c_str(), jsonToHash.length());
     sha256.finalizeHMAC(key, keyLen, hmacBytes, sizeof(hmacBytes));
 
-  
+    // Convert HMAC bytes to hex string
     String hmacHex;
     char buf[3];
     for (int i = 0; i < SHA256::HASH_SIZE; i++) {

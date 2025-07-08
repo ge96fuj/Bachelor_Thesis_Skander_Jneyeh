@@ -2,14 +2,14 @@ const mqtt = require('mqtt');
 const { TrafficLightStatus } = require('../core/TrafficLight');
 
 // Connect to  MQTT broker
-const mqttClient = mqtt.connect('mqtt://192.168.0.101:1883');
+const mqttClient = mqtt.connect(`mqtt://${global.IP}:1883`);
 
 mqttClient.on('connect', () => {
   console.log('Connected to MQTT broker (localhost:1883)');
 });
 
 mqttClient.on('error', (err) => {
-  console.error('❌ MQTT connection error:', err);
+  console.error(' MQTT connection error:', err);
 });
 
 const STATUS_MAP = {
@@ -37,7 +37,7 @@ function publishTrafficLightStatuses() {
   }
 }
 // Every 4 sec
-setInterval(publishTrafficLightStatuses, 2000); 
+setInterval(publishTrafficLightStatuses,50); 
 
 module.exports = mqttClient;
 

@@ -1,14 +1,27 @@
+const crypto = require('crypto');
+const { buildAuthenticatedJsonCommand } = require('./security');
+
+
 
 function sendCommand(socket, code, label, lightID = '') {
     if (!socket || socket.destroyed) {
-        console.log(`⚠️ Socket not available for ${lightID}`);
+        console.log(`Socket not available for ${lightID}`);
         global.stopLoop = true;
         return false;
     }
-    console.log(`${label} Sending (${code}) to ${lightID}`);
-    socket.write(Buffer.from([code]));
+
+    let message;
+    if (global.HashingOn || global.TimestampOn ) {
+        message = buildAuthenticatedJsonCommand(code);
+    } else {
+        message = JSON.stringify({ command: code, lightID });
+    }
+
+    console.log(`${label} Sending JSON command (${code}) to ${lightID}`);
+    socket.write(message);
     return true;
 }
+
 
 async function goRed(socket, lightID) {
     return sendCommand(socket, 0x21, "🔴 RED →", lightID);
@@ -33,4 +46,4 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-module.exports = { goRed, goYellow, goGreen, goBlink, sleep };
+module.exports = { goRed, goYellow, goGreen, goBlink, sleep, sendCommand };
