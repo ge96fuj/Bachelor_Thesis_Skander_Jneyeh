@@ -23,6 +23,13 @@ verifyTimeStamp = true   // or false
 Hashing = true           // or false
 ```
 
+
+### 3. Share Traffic light Status via MQTT
+
+
+
+
+
 ## Edit the configuration file on the server side:
 In config/config.js, define the traffic lights by assigning each a unique ID, optional group name, and the duration for red, yellow, and green lights (in milliseconds). The ID used in the config must match the ID hardcoded on the corresponding client.
 Example :
