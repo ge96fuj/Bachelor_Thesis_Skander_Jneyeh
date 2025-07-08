@@ -43,7 +43,7 @@ module.exports = [
     durations: {
       red: 2000,
       yellow: 2000,
-      green: 400000000
+      green: 4000
     }
   },
   {
