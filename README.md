@@ -65,4 +65,4 @@ cd Traffic-Light-Server-Client/Server
 npm install
 npm start
 ```
-
+## Flash the Arduino with the corresponding SW and RUN
