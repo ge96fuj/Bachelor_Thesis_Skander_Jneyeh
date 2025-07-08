@@ -5,7 +5,7 @@ global.HashingOn = false;
 global.TimestampOn = false;
 global.AllowedDelay = 5; // Timestamp verification in seconds
 
-//publish status in MQTT ?
+
 
 //Server Config
 global.IP = '192.168.0.106';
