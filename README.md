@@ -16,7 +16,7 @@ This project is a traffic light control system that includes a server (Node.js) 
 ### 1. Configure IP Addresses
 
 Update the IP addresses on **both the client and server sides** to ensure proper communication.  
-Make sure the server IP defined in the client's sketch matches your actual server's IP.
+
 
 ---
 
