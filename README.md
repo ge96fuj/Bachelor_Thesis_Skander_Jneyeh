@@ -54,6 +54,7 @@ module.exports = [
 ```
 ## Run The Server
 ```js
+cd Traffic-Light-Server-Client/Server
 npm install
 npm start
 ```
