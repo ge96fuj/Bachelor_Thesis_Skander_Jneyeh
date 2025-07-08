@@ -4,7 +4,7 @@ module.exports = [
     localization_x: 0,
     localization_y: 0,
     group: "A",
-    durations: { red: 2000, yellow: 2000, green: 400000000 }
+    durations: { red: 2000, yellow: 2000, green: 4000 }
   },
   {
     id: "traffic2",
